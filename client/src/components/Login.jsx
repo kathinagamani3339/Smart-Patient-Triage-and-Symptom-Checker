@@ -24,7 +24,7 @@ const Login = () => {
       return;
     }
 
-    // ✅ Login success (API later)
+    // Login success (API later)
     console.log("Logged in:", formData);
 
     // Navigate to Symptoms Entry page

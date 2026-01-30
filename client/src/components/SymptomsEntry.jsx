@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const symptomsList = [
   "Fever",
@@ -14,6 +16,7 @@ const symptomsList = [
 const SymptomsEntry = () => {
   const [search, setSearch] = useState("");
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+    const navigate = useNavigate();
 
   const filteredSymptoms = symptomsList.filter((symptom) =>
     symptom.toLowerCase().includes(search.toLowerCase())
@@ -26,6 +29,13 @@ const SymptomsEntry = () => {
       setSelectedSymptoms([...selectedSymptoms, symptom]);
     }
   };
+
+   const handleContinue = () => {
+    navigate("/triageresult", {
+      state: { symptoms: selectedSymptoms },
+    });
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-6">
@@ -58,8 +68,12 @@ const SymptomsEntry = () => {
           ))}
         </div>
 
-        <button className="mt-6 w-full bg-blue-500 text-white py-2 rounded">
-          Continue
+        <button
+          onClick={handleContinue}
+          disabled={selectedSymptoms.length === 0}
+          className="mt-6 w-full bg-blue-500 text-white py-2 rounded disabled:bg-gray-400"
+        >
+          Next
         </button>
       </div>
     </div>
