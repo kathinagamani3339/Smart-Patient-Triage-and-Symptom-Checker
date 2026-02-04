@@ -20,88 +20,187 @@ const TriageResult = () => {
     );
   }
 
- // data extraction
+  // data extraction
   const possibleConditions = Array.isArray(triageData.conditions)
     ? triageData.conditions
     : [];
 
-  const adviceList = Array.isArray(
-    triageData.generalAdvice?.recommendedActions
-  )
+  const adviceList = Array.isArray(triageData.generalAdvice?.recommendedActions)
     ? triageData.generalAdvice.recommendedActions
     : [];
 
   const patientInfo = triageData.patientInfo || {};
 
- // overall urgency
-  const overallUrgency = possibleConditions.some(
-    (c) => c.riskLevel === "High"
-  )
+  // overall urgency
+  const overallUrgency = possibleConditions.some((c) => c.riskLevel === "High")
     ? "High"
-    : possibleConditions.some((c) => c.riskLevel === "Medium")
-    ? "Medium"
-    : "Low";
+    : possibleConditions.some((c) => c.riskLevel === "Moderate")
+      ? "Moderate"
+      : "Low";
 
   const urgencyColor = {
-    High: "bg-red-500 text-white",
-    Medium: "bg-yellow-400 text-black",
-    Low: "bg-green-500 text-white",
+    High: "bg-red-500 text-black",
+    Moderate: "bg-yellow-400 text-black",
+    Low: "bg-green-500 text-black",
   };
-// pdf doenload
+  // pdf doenload
   const downloadPDF = () => {
     const doc = new jsPDF();
 
-    doc.setFontSize(18);
-    doc.text("Triage Result Report", 20, 20);
+    // Header part in pdf
+    doc.setFillColor(30, 64, 175); // blue header
+    doc.rect(0, 0, 210, 30, "F");
 
-    doc.setFontSize(12);
-    doc.text(`Overall Urgency: ${overallUrgency}`, 20, 40);
+    doc.setFont("helvetica", "bold"); //font family
+    doc.setFontSize(20); // font size is 20
+    doc.setTextColor(255, 255, 255); //text color is white
+    doc.text("AI TRIAGE REPORT", 105, 18, { align: "center" });
 
-    doc.text("Patient Info:", 20, 55);
-    doc.text(`Age: ${patientInfo.age || "-"}`, 25, 65);
-    doc.text(`Gender: ${patientInfo.gender || "-"}`, 25, 73);
-    doc.text(`Height: ${patientInfo.height || "-"} cm`, 25, 81);
-    doc.text(`Weight: ${patientInfo.weight || "-"} kg`, 25, 89);
-    doc.text(`Symptom Duration: ${patientInfo.symptomDuration || "-"}`, 25, 97);
-    doc.text(`Pain Severity: ${patientInfo.painSeverity || "-"}`, 25, 105);
+    doc.setTextColor(0, 0, 0);
+
+    let y = 45;
+
+    /* ========= URGENCY BOX ========= */
+    const urgencyColors = {
+      High: [220, 38, 38],
+      Moderate: [234, 179, 8],
+      Low: [34, 197, 94],
+    };
+
+    const color = urgencyColors[overallUrgency] || [100, 100, 100];
+
+    doc.setFillColor(...color);
+    doc.rect(14, y - 8, 182, 12, "F");
+
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Overall Urgency: ${overallUrgency}`, 105, y, {
+      align: "center",
+    });
+
+    doc.setTextColor(0, 0, 0);
+    y += 15;
+
+    //patient information
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Patient Information", 14, y);
+
+    y += 8;
+    doc.setFont("helvetica", "normal");
+
+    const patientLines = [
+      `Age: ${patientInfo.age || "-"}`,
+      `Gender: ${patientInfo.gender || "-"}`,
+      `Height: ${patientInfo.height || "-"} cm`,
+      `Weight: ${patientInfo.weight || "-"} kg`,
+      `Symptom Duration: ${patientInfo.symptomDuration || "-"}`,
+      `Pain Severity: ${patientInfo.painSeverity || "-"}`,
+    ];
+
+    patientLines.forEach((line) => {
+      doc.text(line, 14, y);
+      y += 7;
+    });
 
     if (patientInfo.lifestyle) {
-      doc.text("Lifestyle:", 25, 115);
-      doc.text(
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      doc.text("Lifestyle:", 14, y);
+
+      y += 7;
+      doc.setFont("helvetica", "normal");
+
+      const lifestyleLines = [
         `Smoking: ${patientInfo.lifestyle.smoking ? "Yes" : "No"}`,
-        30,
-        123
-      );
-      doc.text(
         `Alcohol: ${patientInfo.lifestyle.alcohol || "-"}`,
-        30,
-        131
-      );
-      doc.text(
         `Exercise: ${patientInfo.lifestyle.exercise || "-"}`,
-        30,
-        139
-      );
-      doc.text(`Diet: ${patientInfo.lifestyle.diet || "-"}`, 30, 147);
+        `Diet: ${patientInfo.lifestyle.diet || "-"}`,
+      ];
+
+      lifestyleLines.forEach((line) => {
+        doc.text(line, 14, y);
+        y += 7;
+      });
     }
 
-    doc.text("Advice:", 20, 160);
-    adviceList.forEach((a, i) => {
-      doc.text(`- ${a}`, 25, 170 + i * 8);
-    });
+    y += 5;
 
-    doc.text("Possible Conditions:", 20, 200);
-    possibleConditions.forEach((c, i) => {
-      doc.text(`- ${c.condition} (${c.riskLevel})`, 25, 210 + i * 8);
-    });
+    //advice section
+    if (adviceList.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Recommended Advice", 14, y);
 
-    doc.save("triage-result.pdf");
+      y += 8;
+      doc.setFont("helvetica", "normal");
+
+      adviceList.forEach((advice) => {
+        const wrapped = doc.splitTextToSize(`• ${advice}`, 180);
+        doc.text(wrapped, 14, y);
+        y += wrapped.length * 6;
+      });
+
+      y += 4;
+    }
+
+    //conditions
+    if (possibleConditions.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Possible Conditions", 14, y);
+
+      y += 8;
+      doc.setFont("helvetica", "normal");
+
+      possibleConditions.forEach((c) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${c.condition} (${c.riskLevel})`, 14, y);
+
+        y += 6;
+        doc.setFont("helvetica", "normal");
+
+        if (c.matchingSymptoms?.length) {
+          const symptomsText = doc.splitTextToSize(
+            `Matching Symptoms: ${c.matchingSymptoms.join(", ")}`,
+            180,
+          );
+
+          doc.setTextColor(80);
+          doc.text(symptomsText, 16, y);
+          doc.setTextColor(0);
+
+          y += symptomsText.length * 6;
+        }
+
+        y += 4;
+
+        //auto page break
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+    }
+
+    //disclaimer
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+
+    doc.text(
+      triageData.disclaimer ||
+        "This AI-generated report is for informational purposes only.",
+      14,
+      285,
+    );
+
+    doc.save("Triage_Report.pdf");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4
-                 bg-[url('/bg_image.jpg')] bg-cover bg-center bg-no-repeat">
-      <div className="bg-[rgb(153_228_242_/_54%)] w-full max-w-lg p-8 rounded-xl shadow-lg">
+    <div
+      className="min-h-screen flex items-center justify-center p-4
+                 bg-[url('/bg_image.jpg')] bg-cover bg-center bg-no-repeat"
+    >
+      <div className="bg-[rgb(58_72_74_/_54%)] w-full max-w-lg p-8 rounded-xl shadow-lg">
         <h2 className="text-xl font-bold mb-4 text-center">Triage Result</h2>
 
         {/* Overall Urgency */}
@@ -112,9 +211,9 @@ const TriageResult = () => {
         </div>
 
         {/* Patient Info */}
-       
-        <div className="mb-6 p-4 rounded bg-[rgb(100_176_194)] text-gray-900">
-          <h3 className="font-semibold mb-2">Patient Information :</h3>
+
+        <div className="mb-6 p-4 rounded-xl bg-[rgb(100_176_194)] text-gray-900">
+          <h3 className="font-bold mb-2">Patient Information :</h3>
           <p>Age: {patientInfo.age || "-"}</p>
           <p>Gender: {patientInfo.gender || "-"}</p>
           <p>Height: {patientInfo.height || "-"} cm</p>
@@ -133,7 +232,7 @@ const TriageResult = () => {
         </div>
         {/* Advice */}
         <div className="mb-6">
-          <h3 className="font-semibold mb-2">Recommended Advice</h3>
+          <h3 className="font-bold mb-2">Recommended Advice</h3>
           {adviceList.length > 0 ? (
             <ul className="list-disc list-inside text-gray-900">
               {adviceList.map((advice, index) => (
@@ -146,20 +245,18 @@ const TriageResult = () => {
         </div>
 
         {/* Conditions */}
-        <h3 className="font-semibold mb-3">Possible Conditions</h3>
+        <h3 className="font-bold mb-3">Possible Conditions</h3>
 
         {possibleConditions.length > 0 ? (
           possibleConditions.map((condition, index) => {
-            const matchingSymptoms = Array.isArray(
-              condition.matchingSymptoms
-            )
+            const matchingSymptoms = Array.isArray(condition.matchingSymptoms)
               ? condition.matchingSymptoms
               : [];
 
             return (
               <div
                 key={index}
-                className="border p-4 rounded mb-3 bg-[rgb(100_176_194)]"
+                className="p-4 rounded-xl mb-3 bg-[rgb(78,140,155)]"
               >
                 <div className="flex justify-between items-center">
                   <p className="font-medium">{condition.condition}</p>
@@ -175,7 +272,7 @@ const TriageResult = () => {
 
                 {matchingSymptoms.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-800">
                       Matching Symptoms:
                     </p>
 
@@ -199,10 +296,16 @@ const TriageResult = () => {
         )}
 
         {/* Buttons */}
-        <div className="mt-6 flex gap-4">
+        <div className="mt-5 flex gap-4 text-red">
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-blue-600 text-white px-4 py-1 rounded-lg hover:bg-gray-700"
+          >
+            Back
+          </button>
           <button
             onClick={downloadPDF}
-            className="w-1/2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            className="w-1/2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
           >
             Download PDF
           </button>
@@ -211,16 +314,14 @@ const TriageResult = () => {
             onClick={() =>
               navigate("/providermap", { state: { urgency: overallUrgency } })
             }
-            className="w-1/2 bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            className="w-1/2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
           >
             Find Nearby Places
           </button>
         </div>
 
         {/* Disclaimer */}
-        <p className="text-xs text-gray-500 mt-4">
-          {triageData.disclaimer}
-        </p>
+        <p className="text-xs text-gray-900 mt-4">{triageData.disclaimer}</p>
       </div>
     </div>
   );

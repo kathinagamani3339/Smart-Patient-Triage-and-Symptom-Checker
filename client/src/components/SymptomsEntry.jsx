@@ -105,8 +105,8 @@ const SymptomsEntry = () => {
       className="min-h-screen flex items-center justify-center p-4
                  bg-[url('/bg_image.jpg')] bg-cover bg-center bg-no-repeat"
     >
-      <div className="bg-[rgb(153_228_242_/_54%)] p-6 rounded-xl w-full max-w-lg">
-        <h2 className="text-xl font-bold mb-4 text-black text-center">
+      <div className="bg-[rgb(58_72_74_/_54%)] p-6 rounded-xl w-full max-w-lg">
+        <h2 className="text-xl font-bold mb-4 text-white text-center">
           Enter Your Health Information
         </h2>
 
@@ -148,12 +148,21 @@ const SymptomsEntry = () => {
         <select
           value={gender}
           onChange={(e) => setGender(e.target.value)}
-          className="w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)] text-white/50"
+          className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${gender === "" ? "text-white/50" : "text-white"}`}
         >
-          <option value="">Select Gender</option>
-          <option value="female">Female</option>
-          <option value="male">Male</option>
-          <option value="other">Other</option>
+          <option value="">
+            Select Gender
+          </option>
+          <option value="female">
+            Female
+          </option>
+          <option value="male">
+            Male
+          </option>
+          <option value="other">
+            Other
+          </option>
         </select>
 
         {/* Medical History */}
@@ -187,7 +196,8 @@ const SymptomsEntry = () => {
         <select
           value={symptomDuration}
           onChange={(e) => setSymptomDuration(e.target.value)}
-          className="w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)] text-white/50"
+          className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${symptomDuration === "" ? "text-white/50" : "text-white"}`}
         >
           <option value="">Symptom Duration</option>
           <option value="less_than_24h">Less than 24 hours</option>
@@ -200,7 +210,8 @@ const SymptomsEntry = () => {
         <select
           value={painSeverity}
           onChange={(e) => setPainSeverity(e.target.value)}
-          className="w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)] text-white/50"
+          className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${painSeverity === "" ? "text-white/50" : "text-white"}`}
         >
           <option value="">Pain Severity</option>
           <option value="mild">Mild</option>
@@ -222,7 +233,8 @@ const SymptomsEntry = () => {
           <select
             value={alcohol}
             onChange={(e) => setAlcohol(e.target.value)}
-            className="w-full border p-3 rounded-xl mb-2 bg-[rgb(100_176_194)] text-white/50"
+            className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${alcohol === "" ? "text-white/50" : "text-white"}`}
           >
             <option value="">Alcohol Consumption</option>
             <option value="none">None</option>
@@ -233,7 +245,8 @@ const SymptomsEntry = () => {
           <select
             value={exercise}
             onChange={(e) => setExercise(e.target.value)}
-            className="w-full border p-3 rounded-xl mb-2 bg-[rgb(100_176_194)] text-white/50"
+            className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${exercise === "" ? "text-white/50" : "text-white"}`}
           >
             <option value="">Exercise Level</option>
             <option value="none">None</option>
@@ -245,7 +258,8 @@ const SymptomsEntry = () => {
           <select
             value={diet}
             onChange={(e) => setDiet(e.target.value)}
-            className="w-full border p-3 rounded-xl mb-4 bg-[rgb(100_176_194)] text-white/50"
+            className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
+  ${diet === "" ? "text-white/50" : "text-white"}`}
           >
             <option value="">Diet Type</option>
             <option value="balanced">Balanced</option>

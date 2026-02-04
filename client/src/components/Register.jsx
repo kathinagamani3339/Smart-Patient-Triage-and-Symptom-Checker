@@ -42,7 +42,7 @@ const Register = () => {
       return;
     }
 
-    console.log("Registered:", formData);
+   alert("Registration is successfull");
 
     navigate("/login");
   };

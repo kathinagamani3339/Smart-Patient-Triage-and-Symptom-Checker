@@ -5,7 +5,6 @@ import { IoIosLock } from "react-icons/io";
 const Login = () => {
   const navigate = useNavigate();
 
-  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -19,14 +18,16 @@ const Login = () => {
     e.preventDefault();
 
     // Basic validation
-    if (!formData.email || !formData.password) {
-      alert("Please enter email and password");
+    if (!formData.email) {
+      alert("Please enter email");
       return;
     }
 
-    // Login success (API later)
-    console.log("Logged in:", formData);
-
+    if (!formData.password) {
+      alert("Please enter password");
+      return;
+    }
+    alert("login successful")
     // Navigate to Symptoms Entry page
     navigate("/symptomsentry");
   };
@@ -44,24 +45,24 @@ const Login = () => {
           <div>
             <label className="block text-gray-700 mb-2">Email</label>
             <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full mb-3 p-2 border rounded"
+            />
           </div>
           <div>
             <label className="block text-gray-700 mb-2">Password</label>
             <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full mb-4 p-2 border rounded"
-        />
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full mb-4 p-2 border rounded"
+            />
           </div>
           <button
             type="submit"
