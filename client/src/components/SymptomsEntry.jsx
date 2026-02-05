@@ -55,14 +55,35 @@ const SymptomsEntry = () => {
     const numericWeight = Number(weight);
 
     // basic Validation
-    if (!symptomsArray.length) return alert("Enter at least one symptom");
-    if (!numericAge || numericAge < 1 || numericAge > 120)
-      return alert("Enter valid age");
-    if (!gender) return alert("Select gender");
-    if (!numericHeight || !numericWeight)
-      return alert("Enter height and weight");
-    if (!symptomDuration) return alert("Select symptom duration");
-    if (!painSeverity) return alert("Select pain severity");
+    if (!symptomsArray.length) {
+      alert("Enter at least one symptom");
+      return;
+    }
+
+    if (!numericAge || numericAge < 1 || numericAge > 120) {
+      alert("Enter a valid age");
+      return;
+    }
+
+    if (!gender) {
+      alert("Select gender");
+      return;
+    }
+
+    if (!numericHeight || !numericWeight) {
+      alert("Enter height and weight");
+      return;
+    }
+
+    if (!symptomDuration) {
+      alert("Select symptom duration");
+      return;
+    }
+
+    if (!painSeverity) {
+      alert("Select pain severity");
+      return;
+    }
 
     const payload = {
       symptoms: symptomsArray,
@@ -83,11 +104,8 @@ const SymptomsEntry = () => {
 
     try {
       setLoading(true);
-      console.log("Payload sent to backend:", payload);
       // After API call
       const triageData = await analyzeSymptomsAPI(payload);
-      console.log("Response from backend:", triageData);
-
       navigate("/triageresult", { state: { triageData } });
     } catch (error) {
       console.error(error);
@@ -151,18 +169,10 @@ const SymptomsEntry = () => {
           className={`w-full border p-3 rounded-xl mb-3 bg-[rgb(100_176_194)]
   ${gender === "" ? "text-white/50" : "text-white"}`}
         >
-          <option value="">
-            Select Gender
-          </option>
-          <option value="female">
-            Female
-          </option>
-          <option value="male">
-            Male
-          </option>
-          <option value="other">
-            Other
-          </option>
+          <option value="">Select Gender</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="other">Other</option>
         </select>
 
         {/* Medical History */}

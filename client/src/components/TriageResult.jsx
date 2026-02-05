@@ -3,22 +3,22 @@ import { useLocation, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 
 const TriageResult = () => {
-  const { state } = useLocation();
-  const navigate = useNavigate();
+    const { state } = useLocation();
+    const navigate = useNavigate();
 
-  // Get triage data
-  const triageData = state?.triageData;
+    // Get triage data
+    const triageData = state?.triageData;
 
-  if (!triageData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-center">
-          No triage data available. <br />
-          Please go back and enter symptoms.
-        </p>
-      </div>
-    );
-  }
+    if (!triageData) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-600 text-center">
+            No triage data available. <br />
+            Please go back and enter symptoms.
+          </p>
+        </div>
+      );
+    }
 
   // data extraction
   const possibleConditions = Array.isArray(triageData.conditions)
@@ -60,7 +60,7 @@ const TriageResult = () => {
 
     let y = 45;
 
-    /* ========= URGENCY BOX ========= */
+  // urgency box
     const urgencyColors = {
       High: [220, 38, 38],
       Moderate: [234, 179, 8],
