@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // api configuration
-const API_BASE_URL = `${import.meta.env.VITE_BASE_URL}/api/diagnosis`;
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/diagnosis`;
 
 const analyzeSymptomsAPI = async (payload) => {
   const response = await axios.post(`${API_BASE_URL}/analyze`, payload);
@@ -108,7 +108,7 @@ const SymptomsEntry = () => {
       const triageData = await analyzeSymptomsAPI(payload);
       navigate("/triageresult", { state: { triageData } });
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       alert(
         error.response?.data?.message ||
           "Failed to analyze symptoms. Please try again.",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IoIosLock } from "react-icons/io";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,10 +15,10 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
+    // Basic frontend validation
     if (!formData.email) {
       alert("Please enter email");
       return;
@@ -27,9 +28,28 @@ const Login = () => {
       alert("Please enter password");
       return;
     }
-    alert("login successful")
-    // Navigate to Symptoms Entry page
-    navigate("/symptomsentry");
+
+    try {
+      // Send POST request to backend login endpoint
+      const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+
+      // Save JWT token and user name in localStorage
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("name", res.data.name);
+
+      // Optional: show success message
+      alert("Login successful");
+
+      // Navigate to Symptoms Entry page
+      navigate("/symptomsentry");
+    } catch (err) {
+      // Handle backend errors
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("Login failed. Please try again.");
+      }
+    }
   };
 
   return (

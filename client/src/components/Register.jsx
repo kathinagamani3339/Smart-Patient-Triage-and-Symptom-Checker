@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IoPersonSharp } from "react-icons/io5";
+import axios from "axios";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -19,15 +20,11 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmpassword
-    ) {
+    // Frontend validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmpassword) {
       alert("Please fill all fields");
       return;
     }
@@ -42,9 +39,23 @@ const Register = () => {
       return;
     }
 
-   alert("Registration is successfull");
+    try {
+      // Send POST request to backend
+      const res = await axios.post("http://localhost:5000/api/auth/register", formData);
 
-    navigate("/login");
+      // Show success message
+      alert(res.data.message);
+
+      // Redirect to login page
+      navigate("/login");
+    } catch (err) {
+      // Handle errors from backend
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("Registration failed. Please try again.");
+      }
+    }
   };
 
   return (

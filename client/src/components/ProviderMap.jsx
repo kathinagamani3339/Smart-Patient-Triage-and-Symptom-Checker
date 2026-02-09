@@ -1,165 +1,145 @@
 import React, { useEffect, useState } from "react";
-import {
-  GoogleMap,
-  Marker,
-  InfoWindow,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { useLocation } from "react-router-dom";
+import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import axios from "axios";
 
-const containerStyle = {
-  width: "100%",
-  height: "90vh",
-};
-
-const defaultCenter = {
-  lat: 17.385,
-  lng: 78.4867,
-};
-
 const ProviderMap = () => {
-  const [location, setLocation] = useState(defaultCenter);
-  const [hospitals, setHospitals] = useState([]);
-  const [selectedHospital, setSelectedHospital] = useState(null);
-  const [hospitalDetails, setHospitalDetails] = useState(null);
+  const { state } = useLocation();
+  const urgency = state?.urgency || "Low";
 
-  //  Load Google Maps
-   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "YOUR_BROWSER_KEY",
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_PLACES_API_KEY,
+    libraries: ["places"],
   });
 
- 
-  //Fetch Nearby Clinics
- 
+  const [map, setMap] = useState(null);
+  const [center, setCenter] = useState({ lat: 17.385044, lng: 78.486671 }); // Default- Hyderabad
+  const [markers, setMarkers] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
-  const fetchHospitals = async (coords) => {
-    try {
-      const res = await axios.get(
-        `http://localhost:5000/api/providers/nearby?lat=${coords.lat}&lng=${coords.lng}`
-      );
-
-      setHospitals(res.data.results || []);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load nearby clinics");
-    }
-  };
-
-
-  //Get User Location
- 
-
+  // Get user's location
   useEffect(() => {
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-
-        setLocation(coords);
-        fetchHospitals(coords);
-      },
-      () => {
-        fetchHospitals(defaultCenter);
-      }
+      (pos) => setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => console.warn("Geolocation denied, using default location")
     );
   }, []);
 
-  
-  // Fetch Hospital Details
- 
+  // Fetch nearby providers when map or center changes
+  useEffect(() => {
+    if (!map) return;
 
-  const fetchHospitalDetails = async (placeId) => {
-    try {
-      const res = await axios.get(
-        `http://localhost:5000/api/providers/details?place_id=${placeId}`
-      );
+    const fetchNearbyProviders = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/providers/nearby`, {
+          params: { lat: center.lat, lng: center.lng, urgency },
+        });
+        setMarkers(res.data.results || []);
+      } catch (err) {
+        console.error("Error fetching nearby providers:", err.message);
+      }
+    };
 
-      setHospitalDetails(res.data);
-    } catch (err) {
-      console.error("Details error:", err);
-    }
+    fetchNearbyProviders();
+  }, [map, center, urgency]);
+
+  if (!isLoaded) return <div>Loading map...</div>;
+
+  // Helper to get today's opening hours
+  const getTodaysHours = (openingHours) => {
+    if (!openingHours || !openingHours.length) return "Hours Unknown";
+    const dayIndex = new Date().getDay(); // Sunday = 0
+    return openingHours[dayIndex === 0 ? 6 : dayIndex - 1]; // Google array starts Mon = 0
   };
-
-  if (!isLoaded) return <h2 className="text-center mt-10">Loading Map...</h2>;
 
   return (
     <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={location}
-      zoom={14}
+      mapContainerStyle={{ width: "100%", height: "100vh" }}
+      center={center}
+      zoom={13}
+      onLoad={(mapInstance) => setMap(mapInstance)}
     >
-      {/* User Marker */}
-      <Marker position={location} label="You" />
-
-      {/* Hospitals */}
-      {hospitals
-        .filter((h) => h?.location)
-        .map((place) => (
-          <Marker
-            key={place.place_id}
-            position={place.location}
-            onClick={() => {
-              setSelectedHospital(place);
-              fetchHospitalDetails(place.place_id);
-            }}
-          />
-        ))}
-
-      {/* Info Window */}
-      {selectedHospital && hospitalDetails && (
-        <InfoWindow
-          position={selectedHospital.location}
-          onCloseClick={() => {
-            setSelectedHospital(null);
-            setHospitalDetails(null);
+      {markers.map((marker) => (
+        <Marker
+          key={marker.place_id}
+          position={marker.location}
+          onClick={async () => {
+            try {
+              const res = await axios.get(
+                `${import.meta.env.VITE_BACKEND_URL}/api/providers/details`,
+                { params: { place_id: marker.place_id } }
+              );
+              setSelectedMarker(res.data);
+            } catch (err) {
+              console.error("Error fetching provider details:", err.message);
+            }
           }}
+        />
+      ))}
+
+      {selectedMarker && (
+        <InfoWindow
+          position={selectedMarker.location}
+          onCloseClick={() => setSelectedMarker(null)}
         >
-          <div className="w-64">
-            {hospitalDetails.photo && (
+          <div className="max-w-xs font-sans bg-white rounded-xl shadow-lg p-4">
+            {selectedMarker.photo && (
               <img
-                src={hospitalDetails.photo}
-                alt="hospital"
-                className="w-full h-32 object-cover rounded"
+                src={selectedMarker.photo}
+                alt={selectedMarker.name}
+                className="w-full h-32 object-cover rounded-md mb-2"
               />
             )}
 
-            <h2 className="font-bold mt-2">
-              {hospitalDetails.name}
-            </h2>
-
-          Rating: {hospitalDetails.rating || "N/A"}
-
-            <p className="text-sm mt-1">
-              {hospitalDetails.address}
+            <h3 className="text-lg font-bold">{selectedMarker.name}</h3>
+            <p className="text-gray-700 text-sm mt-1">{selectedMarker.address}</p>
+            <p
+              className={`mt-1 text-sm font-semibold ${
+                selectedMarker.openNow === true
+                  ? "text-green-600"
+                  : selectedMarker.openNow === false
+                  ? "text-red-600"
+                  : "text-gray-600"
+              }`}
+            >
+              {selectedMarker.openNow === true
+                ? "Open Now"
+                : selectedMarker.openNow === false
+                ? "Closed"
+                : "Hours Unknown"}
             </p>
-
-            {hospitalDetails.phone && (
-              <p className="text-sm">
-               {hospitalDetails.phone}
+            <p className="text-gray-700 text-sm mt-1">📞 {selectedMarker.phone}</p>
+            {selectedMarker.rating && (
+              <p className="text-yellow-500 font-semibold mt-1">
+                {"★".repeat(Math.floor(selectedMarker.rating))}{" "}
+                <span className="text-gray-500">({selectedMarker.rating})</span>
               </p>
             )}
 
-            <div className="flex gap-2 mt-2">
-              {hospitalDetails.website && (
-                <a
-                  href={hospitalDetails.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 text-sm"
-                >
-                  Website
-                </a>
-              )}
+            {selectedMarker.openingHours && (
+              <div className="mt-2 text-gray-600 text-xs">
+                <strong>Today's Hours:</strong>
+                <p>{getTodaysHours(selectedMarker.openingHours)}</p>
+              </div>
+            )}
 
+            <div className="flex justify-between mt-3">
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${hospitalDetails.location.lat},${hospitalDetails.location.lng}`}
+                href={selectedMarker.directionsUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="text-green-600 text-sm"
+                className="flex-1 mr-1 text-center bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
               >
                 Directions
+              </a>
+              <a
+                href={
+                  selectedMarker.website ?? `https://www.google.com/search?q=${selectedMarker.name}`
+                }
+                target="_blank"
+                className="flex-1 ml-1 text-center bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs"
+              >
+                Website
               </a>
             </div>
           </div>

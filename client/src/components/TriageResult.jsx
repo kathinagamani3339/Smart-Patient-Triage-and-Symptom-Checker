@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
+// import ProviderMap from "./ProviderMap";
 
 const TriageResult = () => {
     const { state } = useLocation();
