@@ -1,27 +1,26 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
-// import ProviderMap from "./ProviderMap";
 
 const TriageResult = () => {
-    const { state } = useLocation();
-    const navigate = useNavigate();
+  const { state } = useLocation();
+  const navigate = useNavigate();
 
-    // Get triage data
-    const triageData = state?.triageData;
+  // Get triage data passed via state from SymptomsEntry page
+  const triageData = state?.triageData;
+  // If no triage data exists, show a fallback message
+  if (!triageData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600 text-center">
+          No triage data available. <br />
+          Please go back and enter symptoms.
+        </p>
+      </div>
+    );
+  }
 
-    if (!triageData) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-600 text-center">
-            No triage data available. <br />
-            Please go back and enter symptoms.
-          </p>
-        </div>
-      );
-    }
-
-  // data extraction
+  // Extract possible conditions and recommended advice
   const possibleConditions = Array.isArray(triageData.conditions)
     ? triageData.conditions
     : [];
@@ -29,39 +28,40 @@ const TriageResult = () => {
   const adviceList = Array.isArray(triageData.generalAdvice?.recommendedActions)
     ? triageData.generalAdvice.recommendedActions
     : [];
+  // Extract patient info from triage data
 
   const patientInfo = triageData.patientInfo || {};
 
-  // overall urgency
+  // Determine overall urgency based on conditions
   const overallUrgency = possibleConditions.some((c) => c.riskLevel === "High")
     ? "High"
-    : possibleConditions.some((c) => c.riskLevel === "Moderate")
-      ? "Moderate"
+    : possibleConditions.some((c) => c.riskLevel === "Medium")
+      ? "Medium"
       : "Low";
-
+  // Define background colors for urgency levels (UI)
   const urgencyColor = {
     High: "bg-red-500 text-black",
-    Moderate: "bg-yellow-400 text-black",
+    Medium: "bg-yellow-400 text-black",
     Low: "bg-green-500 text-black",
   };
-  // pdf doenload
+  // Function to download the triage report as a PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
 
     // Header part in pdf
-    doc.setFillColor(30, 64, 175); // blue header
-    doc.rect(0, 0, 210, 30, "F");
+    doc.setFillColor(30, 64, 175); //  blue header background
+    doc.rect(0, 0, 210, 30, "F"); // Draw rectangle
 
-    doc.setFont("helvetica", "bold"); //font family
-    doc.setFontSize(20); // font size is 20
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
     doc.setTextColor(255, 255, 255); //text color is white
-    doc.text("AI TRIAGE REPORT", 105, 18, { align: "center" });
+    doc.text("AI TRIAGE REPORT", 105, 18, { align: "center" }); // Centered header
 
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(0, 0, 0); // Reset text color for body
 
-    let y = 45;
+    let y = 45; // initial vertical position
 
-  // urgency box
+    // overall urgency box
     const urgencyColors = {
       High: [220, 38, 38],
       Moderate: [234, 179, 8],
@@ -71,7 +71,7 @@ const TriageResult = () => {
     const color = urgencyColors[overallUrgency] || [100, 100, 100];
 
     doc.setFillColor(...color);
-    doc.rect(14, y - 8, 182, 12, "F");
+    doc.rect(14, y - 8, 182, 12, "F"); // Draw colored box
 
     doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
@@ -89,7 +89,7 @@ const TriageResult = () => {
 
     y += 8;
     doc.setFont("helvetica", "normal");
-
+    // Patient basic info
     const patientLines = [
       `Age: ${patientInfo.age || "-"}`,
       `Gender: ${patientInfo.gender || "-"}`,
@@ -103,7 +103,7 @@ const TriageResult = () => {
       doc.text(line, 14, y);
       y += 7;
     });
-
+    // Lifestyle info if exists
     if (patientInfo.lifestyle) {
       y += 4;
       doc.setFont("helvetica", "bold");
@@ -127,7 +127,7 @@ const TriageResult = () => {
 
     y += 5;
 
-    //advice section
+    // Recommended Advice
     if (adviceList.length > 0) {
       doc.setFont("helvetica", "bold");
       doc.text("Recommended Advice", 14, y);
@@ -144,7 +144,7 @@ const TriageResult = () => {
       y += 4;
     }
 
-    //conditions
+    //possible conditions
     if (possibleConditions.length > 0) {
       doc.setFont("helvetica", "bold");
       doc.text("Possible Conditions", 14, y);
@@ -174,7 +174,7 @@ const TriageResult = () => {
 
         y += 4;
 
-        //auto page break
+        // Auto page break if content exceeds page height
         if (y > 270) {
           doc.addPage();
           y = 20;
@@ -193,7 +193,7 @@ const TriageResult = () => {
       285,
     );
 
-    doc.save("Triage_Report.pdf");
+    doc.save("Triage_Report.pdf"); //download pdf
   };
 
   return (
@@ -231,7 +231,7 @@ const TriageResult = () => {
             </div>
           )}
         </div>
-        {/* Advice */}
+        {/* Advice section*/}
         <div className="mb-6">
           <h3 className="font-bold mb-2">Recommended Advice</h3>
           {adviceList.length > 0 ? (
@@ -245,7 +245,7 @@ const TriageResult = () => {
           )}
         </div>
 
-        {/* Conditions */}
+        {/* possible Conditions */}
         <h3 className="font-bold mb-3">Possible Conditions</h3>
 
         {possibleConditions.length > 0 ? (
@@ -270,7 +270,7 @@ const TriageResult = () => {
                     {condition.riskLevel}
                   </span>
                 </div>
-
+                {/* Matching symptoms badges */}
                 {matchingSymptoms.length > 0 && (
                   <div className="mt-2">
                     <p className="text-sm font-medium text-gray-800">
@@ -296,7 +296,7 @@ const TriageResult = () => {
           <p className="text-gray-500">No conditions matched your symptoms.</p>
         )}
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <div className="mt-5 flex gap-4 text-red">
           <button
             onClick={() => navigate(-1)}

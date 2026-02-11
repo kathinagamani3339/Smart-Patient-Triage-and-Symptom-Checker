@@ -1,89 +1,108 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaUserCircle } from "react-icons/fa"; // profile icon
+import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 
-const Header = () => {
-  const location = useLocation();
+const DashboardLayout = () => {
   const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const location = useLocation();
 
-  // Initialize user from JWT token
-  const token = localStorage.getItem("token");
-  let initialUser = null;
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      initialUser = { name: payload.name || "User" };
-    } catch (err) {
-      console.error("Failed to decode token", err);
-      initialUser = null;
-    }
-  }
+  // State to toggle profile dropdown menu
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const [user, setUser] = useState(initialUser);
-
-  const navLink = (path) =>
-    `px-4 py-2 rounded-lg transition ${
-      location.pathname === path
-        ? "bg-white text-blue-600 font-semibold"
-        : "text-white hover:bg-blue-500"
-    }`;
-
+  // Logout function: remove token and name from localStorage and redirect to login
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(null); // clear user state
-    setShowDropdown(false);
-    navigate("/login");
+    localStorage.removeItem("name");
+    navigate("/login", { replace: true });
   };
 
+  // Helper function to check if a navigation tab is active
+  const isActive = (path) => location.pathname === path;
+
+  // Get the user's name from localStorage, default to "User"
+  const userName = localStorage.getItem("name") || "User";
+
   return (
-    <header className="bg-[rgb(45_110_130)] shadow-md sticky top-0 z-50">
-      <div className="ml-7 mx-auto flex justify-between items-center p-4">
-        <h1 className="text-white text-xl font-bold tracking-wide text-left">
-          AI Smart Triage
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-blue-500 px-6 py-4 flex justify-between items-center">
+        {/* App Title */}
+        <h1 className="text-lg font-semibold text-white">
+          Smart Patient Triage
         </h1>
 
-        {/* Left navigation */}
-        <nav className="flex gap-4">
-          <Link to="/symptomsentry" className={navLink("/symptomsentry")}>
-            SymptomsEntry
+        {/* Navigation Tabs */}
+        <div className="flex gap-2">
+          {/* Symptoms Entry Tab */}
+          <Link
+            to="/symptomsentry"
+            className={`px-4 py-2 rounded font-medium ${
+              isActive("/symptomsentry")
+                ? "bg-white text-blue-500"
+                : "bg-blue-500 text-white"
+            } hover:bg-blue-500 hover:text-white`}
+          >
+            Symptoms Entry
           </Link>
-          <Link to="/triageresult" className={navLink("/triageresult")}>
-            Triage Results
-          </Link>
-          <Link to="/providermap" className={navLink("/providermap")}>
-            Nearby Clinics
-          </Link>
-        </nav>
 
-        {/* Profile icon */}
-        {user && (
-          <div className="relative ml-4">
-            <FaUserCircle
-              size={28}
-              className="text-white cursor-pointer"
-              onClick={() => setShowDropdown(!showDropdown)}
-            />
+          {/* Triage Result Tab */}
+          <Link
+            to="/triageresult"
+            className={`px-4 py-2 rounded font-medium ${
+              isActive("/triageresult")
+                ? "bg-white text-blue-500"
+                : "bg-blue-500 text-white"
+            } hover:bg-blue-500 hover:text-white`}
+          >
+            Triage Result
+          </Link>
 
-            {/* Dropdown */}
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 z-50">
-                <p className="px-4 py-2 text-gray-800 font-semibold border-b">
-                  {user.name}
-                </p>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </header>
+          {/* Provider Map Tab */}
+          <Link
+            to="/providermap"
+            className={`px-4 py-2 rounded font-medium ${
+              isActive("/providermap")
+                ? "bg-white text-blue-500"
+                : "bg-blue-500 text-white"
+            } hover:bg-blue-500 hover:text-white`}
+          >
+            Provider Map
+          </Link>
+        </div>
+
+        {/* Profile Section */}
+        <div className="relative ml-4">
+          {/* Profile Image / Icon */}
+          <img
+            src="/profile.png" // Replace with your profile image
+            alt="Profile"
+            className="w-10 h-10 rounded-full cursor-pointer border-2 border-white"
+            onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
+          />
+
+          {/* Dropdown Menu */}
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg text-blue-500 font-medium">
+              {/* Display current user's name */}
+              <p className="px-4 py-2 border-b">{userName}</p>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-blue-500 hover:text-white rounded-b"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Page Content: renders nested routes here */}
+      <main className="p-4">
+        <Outlet />
+      </main>
+    </div>
   );
 };
 
-export default Header;
+export default DashboardLayout;
