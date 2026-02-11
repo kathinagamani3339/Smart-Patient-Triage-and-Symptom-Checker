@@ -14,13 +14,8 @@ export const getDiagnosisFromAI = async (payload) => {
 
     return response.data;
   } catch (error) {
-    console.error(
-      "AI API error:",
-      error.response?.data || error.message
-    );
+    console.error("AI API error:", error.response?.data || error.message);
 
-    throw new Error(
-      error.response?.data?.message || "Failed to call AI API"
-    );
+    throw new Error(error.response?.data?.message || "Failed to call AI API");
   }
 };

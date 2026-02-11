@@ -6,7 +6,6 @@ import diagnosisRoutes from "./routes/diagnosis.routes.js"; // stays the same
 import providerRoutes from "./routes/provider.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 
-
 const app = express();
 //middileware
 app.use(cors());

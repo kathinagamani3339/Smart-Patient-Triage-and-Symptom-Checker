@@ -1,5 +1,8 @@
 import express from "express";
-import { getNearbyClinics, getProviderDetails } from "../controllers/provider.controller.js";
+import {
+  getNearbyClinics,
+  getProviderDetails,
+} from "../controllers/provider.controller.js";
 
 const router = express.Router();
 
