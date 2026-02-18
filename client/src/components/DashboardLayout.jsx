@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { IoPersonSharp } from "react-icons/io5"; 
 
-const DashboardLayout = () => {
+const DashboardLayouts = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -101,4 +101,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout;
+export default DashboardLayouts;
