@@ -9,13 +9,13 @@ export const registerUser = async (req, res) => {
   // Check for missing fields
   if (!name || !email || !password || !confirmpassword) {
     console.error("Registration failed: All fields are required");
-    return res.status(400).json({ message: "All fields are required" });
+    return res.status(400).json({ message: "Please fill all required fields" });
   }
 
   // Check if passwords match
   if (password !== confirmpassword) {
-    console.error("Registration failed: Passwords do not match");
-    return res.status(400).json({ message: "Passwords do not match" });
+    console.error("Registration failed: Password do not match");
+    return res.status(400).json({ message: "Password do not match" });
   }
 
   try {
@@ -23,7 +23,9 @@ export const registerUser = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.error(`Registration failed: Email ${email} already exists`);
-      return res.status(400).json({ message: "Email already exists" });
+      return res
+        .status(400)
+        .json({ message: "Email already exists, Please login." });
     }
 
     // Hash the password before saving
@@ -34,10 +36,12 @@ export const registerUser = async (req, res) => {
     await newUser.save();
 
     console.log(`User registered successfully: ${email}`);
-    res.status(201).json({ message: "User registered successfully" });
+    res
+      .status(201)
+      .json({ message: "Registration successful, Please login to continue." });
   } catch (err) {
     console.error("Server error during registration:", err.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "registration failed" });
   }
 };
 
@@ -45,39 +49,48 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate input
+  // Check empty fields
   if (!email || !password) {
-    console.error("Login failed: All fields are required");
     return res.status(400).json({ message: "All fields are required" });
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Email is invalid" });
+  }
+
   try {
-    // Find user by email
+    // Check if user exists
     const user = await User.findOne({ email });
+
+    // If email not found
     if (!user) {
-      console.error(`Login failed: Invalid credentials for ${email}`);
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(404).json({
+        message: "User not found, please register first",
+      });
     }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      console.error(`Login failed: Invalid credentials for ${email}`);
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        message: "Password is incorrect",
+      });
     }
 
-    // Generate JWT token
+    //Generate JWT
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    console.log(`User logged in successfully: ${email}`);
     res.status(200).json({ token, name: user.name });
   } catch (err) {
-    console.error("Server error during login:", err.message);
-    res.status(500).json({ message: "Server error" });
+    console.error("Server error:", err.message);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 

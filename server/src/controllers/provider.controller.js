@@ -3,111 +3,142 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// google api key
+// Load API key safely
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_BACKEND_KEY;
-console.log("Google API Key loaded");
 
-// Get nearby clinics/hospitals
+if (!GOOGLE_API_KEY) {
+  console.error("Google API key is missing in environment variables");
+  process.exit(1); // Stop server if key is missing
+}
+//get nearby clinics or hospitals
+
 export const getNearbyClinics = async (req, res) => {
   try {
-    const { lat, lng, urgency } = req.query;
-    console.log("Nearby clinics request received:", { lat, lng, urgency });
+    let { lat, lng, urgency } = req.query;
 
-    // Validate required params
+    console.log("Nearby request:", { lat, lng, urgency });
+
+    //Validate params
     if (!lat || !lng) {
-      console.warn("Latitude or Longitude missing");
       return res
         .status(400)
         .json({ message: "Latitude and Longitude are required" });
     }
 
-    // Determine type & keyword based on urgency
-    let type = "hospital";
-    let keyword = "hospital";
+    //Convert to numbers
+    lat = Number(lat);
+    lng = Number(lng);
 
-    if (urgency === "Moderate") {
-      type = "hospital";
-      keyword = "clinic|doctor";
-    } else if (urgency === "Low") {
-      type = "hospital";
-      keyword = "clinic|health|doctor";
+    if (isNaN(lat) || isNaN(lng)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid latitude or longitude values" });
     }
 
-    console.log("Searching nearby places with:", { type, keyword });
+    //Adjust radius based on urgency
 
-    // Call Google Places API
-    const url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
-    const response = await axios.get(url, {
-      params: {
-        location: `${lat},${lng}`,
-        radius: 5000, // 5 km radius
-        type,
-        keyword,
-        key: GOOGLE_API_KEY,
+    let radius = 5000; // default 5km
+
+    if (urgency === "High") {
+      radius = 3000; // closer hospitals
+    } else if (urgency === "Medium") {
+      radius = 5000;
+    } else if (urgency === "Low") {
+      radius = 8000; // more options
+    }
+
+    console.log(`Searching hospitals within ${radius} meters`);
+
+    //Call Google Nearby Search API
+
+    const response = await axios.get(
+      "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+      {
+        params: {
+          location: `${lat},${lng}`,
+          radius,
+          type: "hospital",
+          key: GOOGLE_API_KEY,
+        },
       },
-    });
+    );
 
-    console.log("Raw nearby places response received");
+    if (!response.data.results) {
+      return res.status(500).json({
+        message: "Invalid response from Google Places API",
+      });
+    }
+    //clean result
 
-    // Filter and clean results
     const cleanedResults = response.data.results
       .filter((place) => place?.geometry?.location)
+      .slice(0, 10) // prevent map overload
       .map((place) => ({
         place_id: place.place_id,
         name: place.name,
-        vicinity: place.vicinity,
+        address: place.vicinity,
         location: place.geometry.location,
         rating: place.rating ?? "N/A",
         openNow: place.opening_hours?.open_now ?? "Unknown",
       }));
 
-    console.log(`Returning ${cleanedResults.length} nearby places`);
-    res.status(200).json({ results: cleanedResults });
+    console.log(`Returning ${cleanedResults.length} providers`);
+
+    res.status(200).json({
+      count: cleanedResults.length,
+      results: cleanedResults,
+    });
   } catch (error) {
     console.error(
       "Google Places Error:",
       error.response?.data || error.message,
     );
-    res.status(500).json({ message: "Failed to fetch nearby clinics" });
+
+    res.status(500).json({
+      message: "Failed to fetch nearby healthcare providers",
+    });
   }
 };
-
-// Get details for a single provider
+//get provider details
 export const getProviderDetails = async (req, res) => {
   try {
     const { place_id } = req.query;
-    console.log("Provider details request received for place_id:", place_id);
 
-    // Validate place_id
+    console.log("Provider details request:", place_id);
+
     if (!place_id) {
-      console.warn("place_id missing in request");
-      return res.status(400).json({ message: "place_id is required" });
+      return res.status(400).json({
+        message: "place_id is required",
+      });
     }
 
-    // Call Google Place Details API
-    const url = "https://maps.googleapis.com/maps/api/place/details/json";
-    const response = await axios.get(url, {
-      params: {
-        place_id,
-        fields:
-          "name,formatted_address,formatted_phone_number,geometry,rating,website,opening_hours,photos,reviews",
-        key: GOOGLE_API_KEY,
+    const response = await axios.get(
+      "https://maps.googleapis.com/maps/api/place/details/json",
+      {
+        params: {
+          place_id,
+          fields:
+            "name,formatted_address,formatted_phone_number,geometry,rating,website,opening_hours,photos,reviews",
+          key: GOOGLE_API_KEY,
+        },
       },
-    });
+    );
 
     const place = response.data.result;
 
     if (!place) {
-      console.warn(`Provider not found for place_id: ${place_id}`);
-      return res.status(404).json({ message: "Provider not found" });
+      return res.status(404).json({
+        message: "Provider not found",
+      });
     }
-    // Build photo URL
+    //build photo url
+
     const photo =
       place.photos?.length > 0
         ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
         : "https://via.placeholder.com/400x250?text=No+Image";
+    //clean provider data
 
-    // Cleaned provider data
     const cleanedData = {
       place_id,
       name: place.name,
@@ -123,10 +154,17 @@ export const getProviderDetails = async (req, res) => {
       directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat},${place.geometry.location.lng}`,
     };
 
-    console.log("Returning cleaned provider details:", cleanedData.name);
+    console.log("Returning provider:", cleanedData.name);
+
     res.status(200).json(cleanedData);
   } catch (error) {
-    console.error("Place Details Error:", error.message);
-    res.status(500).json({ message: "Failed to fetch provider details" });
+    console.error(
+      "Place Details Error:",
+      error.response?.data || error.message,
+    );
+
+    res.status(500).json({
+      message: "Failed to fetch provider details",
+    });
   }
 };
