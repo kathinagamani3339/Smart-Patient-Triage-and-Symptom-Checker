@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { IoPersonSharp } from "react-icons/io5";
+import { IoPersonSharp } from "react-icons/io5"; 
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ const DashboardLayout = () => {
 
   // Logout function remove token and name from localStorage and redirect to login
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("token"); 
     localStorage.removeItem("name");
     navigate("/login", { replace: true });
   };

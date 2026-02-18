@@ -17,31 +17,48 @@ const ProviderMap = () => {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_PLACES_API_KEY,
     libraries: LIBRARIES,
-  }); 
+  });
 
   // Map and marker states
   const [map, setMap] = useState(null);
-  const [center, setCenter] = useState({ lat: 17.385044, lng: 78.486671 }); // Default location - Hyderabad
+  const [center, setCenter] = useState();
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [userLocation, setUserLocation] = useState(null); // User's current location
+  const [locationStatus, setLocationStatus] = useState(null);
+  const [websiteMessage, setWebsiteMessage] = useState(false);
 
   // Get user's current location
   useEffect(() => {
     if (!navigator.geolocation) return;
+
+    const allowLocation = window.confirm(
+      "This page needs your location to show nearby clinics. Allow location access?",
+    );
+
+    if (!allowLocation) {
+      setTimeout(() => {
+        setLocationStatus("denied");
+      }, 0);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCenter(loc); // Center map on user
-        setUserLocation(loc); // Show user marker
+        setCenter(loc);
+        setUserLocation(loc);
+        setLocationStatus("granted");
       },
-      () => console.warn("Geolocation denied, using default location"),
+      () => {
+        setLocationStatus("denied");
+      },
     );
   }, []);
 
   // Fetch nearby providers when map is loaded or center changes
   useEffect(() => {
-    if (!map) return;
+    if (!map || !center || locationStatus !== "granted") return;
 
     const fetchNearbyProviders = async () => {
       try {
@@ -58,9 +75,15 @@ const ProviderMap = () => {
     };
 
     fetchNearbyProviders();
-  }, [map, center, urgency]);
+  }, [map, center, urgency, locationStatus]);
 
   if (!isLoaded) return <div>Loading map...</div>;
+
+  if (locationStatus === "denied") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-opacity-40 z-50">Location permission denied. Unable to show nearby clinics.</div>
+    );
+  }
 
   // Helper: get today's opening hours from provider data
   const getTodaysHours = (openingHours) => {
@@ -168,16 +191,30 @@ const ProviderMap = () => {
               >
                 Directions
               </a>
-              <a
-                href={
-                  selectedMarker.website ??
-                  `https://www.google.com/search?q=${selectedMarker.name}`
-                }
-                target="_blank"
-                className="flex-1 ml-1 text-center bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs"
-              >
-                Website
-              </a>
+              <>
+                <a
+                  href={selectedMarker.website || "#"}
+                  target="_blank"
+                  onClick={(e) => {
+                    if (!selectedMarker.website) {
+                      e.preventDefault();
+                      setWebsiteMessage(true);
+                      setTimeout(() => setWebsiteMessage(false), 2000);
+                    }
+                  }}
+                  className="flex-1 ml-1 text-center bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs"
+                >
+                  Website
+                </a>
+
+                {websiteMessage && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-opacity-40 z-50">
+                    <div className="bg-white px-6 py-3 rounded-lg shadow-lg text-center font-semibold">
+                      website not available.
+                    </div>
+                  </div>
+                )}
+              </>
             </div>
           </div>
         </InfoWindow>

@@ -7,7 +7,7 @@ import {
   Outlet,
 } from "react-router-dom";
 
-import Login from "./components/Login";
+import Login from "./components/login";
 import Register from "./components/Register";
 import Layout from "./components/DashboardLayout";
 import SymptomsEntry from "./components/SymptomsEntry";

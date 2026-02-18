@@ -18,6 +18,7 @@ const Register = () => {
   // Error messages state
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -169,7 +170,7 @@ const Register = () => {
             Confirm Password <span className="text-red-500">*</span>
           </label>
           <input
-            type={showPassword ? "text" : "password"}
+            type={showConfirmPassword ? "text" : "password"}
             name="confirmpassword"
             value={formData.confirmpassword}
             onChange={handleChange}
@@ -178,10 +179,10 @@ const Register = () => {
           {/* Eye Icon */}
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={() =>setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-[38px] text-gray-500"
           >
-            {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+            {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
           </button>
           {errors.confirmpassword && (
             <p className="text-red-500 text-sm mb-4">

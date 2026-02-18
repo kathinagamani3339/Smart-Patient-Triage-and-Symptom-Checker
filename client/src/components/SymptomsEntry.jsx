@@ -56,7 +56,7 @@ const SymptomsEntry = () => {
     const numericWeight = Number(weight);
 
     // Basic Validation
-    if (!symptomsArray.length) return alert("Enter at least one symptom");
+    if (!symptomsArray.length) return alert("Enter at least one symptom"); 
     if (!numericAge || numericAge < 1 || numericAge > 120)
       return alert("Enter a valid age");
     if (!gender) return alert("Select gender");
@@ -84,7 +84,7 @@ const SymptomsEntry = () => {
     };
 
     try {
-      setLoading(true);
+      setLoading(true); 
       // Call backend API
       const triageData = await analyzeSymptomsAPI(payload);
       // Navigate to Triage Result page with data
