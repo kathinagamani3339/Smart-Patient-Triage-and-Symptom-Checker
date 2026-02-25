@@ -66,6 +66,7 @@ const SymptomsEntry = () => {
     if (!painSeverity) return alert("Select pain severity");
 
     // Construct payload for API
+    const token = localStorage.getItem("token");
     const payload = {
       symptoms: symptomsArray,
       patientInfo: {
@@ -81,6 +82,9 @@ const SymptomsEntry = () => {
         painSeverity,
       },
       lang: "en",
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔥 important
+        },
     };
 
     try {

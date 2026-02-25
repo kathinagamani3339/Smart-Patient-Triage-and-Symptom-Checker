@@ -69,7 +69,6 @@ const Register = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) return;
-
     try {
       // Send POST request to backend
       const res = await axios.post(
@@ -179,10 +178,14 @@ const Register = () => {
           {/* Eye Icon */}
           <button
             type="button"
-            onClick={() =>setShowConfirmPassword(!showConfirmPassword)}
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-[38px] text-gray-500"
           >
-            {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+            {showConfirmPassword ? (
+              <FaEyeSlash size={18} />
+            ) : (
+              <FaEye size={18} />
+            )}
           </button>
           {errors.confirmpassword && (
             <p className="text-red-500 text-sm mb-4">
