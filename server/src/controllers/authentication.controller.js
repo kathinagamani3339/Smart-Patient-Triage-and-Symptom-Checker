@@ -37,7 +37,7 @@ export const registerUser = async (req, res, next) => {
       .json({ message: "Registration successful, Please login to continue." });
 
   } catch (err) {
-    next(err);   // 🔥 send exact error to global handler
+    next(err);   //send exact error to global handler
   }
 };
 
@@ -78,7 +78,7 @@ export const loginUser = async (req, res, next) => {
     res.status(200).json({ token, name: user.name });
 
   } catch (err) {
-    next(err);   // 🔥 exact error
+    next(err);   //exact error
   }
 };
 
@@ -95,6 +95,6 @@ export const getProfile = async (req, res, next) => {
     res.status(200).json({ user: userData });
 
   } catch (err) {
-    next(err);  // 🔥 exact error
+    next(err);  //exact error
   }
 };
