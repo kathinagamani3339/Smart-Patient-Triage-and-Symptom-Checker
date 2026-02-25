@@ -3,111 +3,98 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 // Register user
-export const registerUser = async (req, res) => {
-  const { name, email, password, confirmpassword } = req.body;
-
-  // Check for missing fields
-  if (!name || !email || !password || !confirmpassword) {
-    console.error("Registration failed: All fields are required");
-    return res.status(400).json({ message: "Please fill all required fields" });
-  }
-
-  // Check if passwords match
-  if (password !== confirmpassword) {
-    console.error("Registration failed: Password do not match");
-    return res.status(400).json({ message: "Password do not match" });
-  }
-
+export const registerUser = async (req, res, next) => {
   try {
-    // Check if user with the same email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.error(`Registration failed: Email ${email} already exists`);
-      return res
-        .status(400)
-        .json({ message: "Email already exists, Please login." });
+    const { name, email, password, confirmpassword } = req.body;
+
+    if (!name || !email || !password || !confirmpassword) {
+      const error = new Error("Please fill all required fields");
+      error.statusCode = 400;
+      throw error;
     }
 
-    // Hash the password before saving
+    if (password !== confirmpassword) {
+      const error = new Error("Password do not match");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      const error = new Error("Email already exists, Please login.");
+      error.statusCode = 400;
+      throw error;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create and save new user
     const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
 
-    console.log(`User registered successfully: ${email}`);
     res
       .status(201)
       .json({ message: "Registration successful, Please login to continue." });
+
   } catch (err) {
-    console.error("Server error during registration:", err.message);
-    res.status(500).json({ message: "registration failed" });
+    next(err);   // 🔥 send exact error to global handler
   }
 };
 
-// login user
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
 
-  // Check empty fields
-  if (!email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: "Email is invalid" });
-  }
-
+// Login user
+export const loginUser = async (req, res, next) => {
   try {
-    // Check if user exists
-    const user = await User.findOne({ email });
+    const { email, password } = req.body;
 
-    // If email not found
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found, please register first",
-      });
+    if (!email || !password) {
+      const error = new Error("All fields are required");
+      error.statusCode = 400;
+      throw error;
     }
 
-    // Compare password
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      const error = new Error("User not found, please register first");
+      error.statusCode = 404;
+      throw error;
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({
-        message: "Password is incorrect",
-      });
+      const error = new Error("Password is incorrect");
+      error.statusCode = 400;
+      throw error;
     }
 
-    //Generate JWT
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
 
     res.status(200).json({ token, name: user.name });
+
   } catch (err) {
-    console.error("Server error:", err.message);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    next(err);   // 🔥 exact error
   }
 };
 
-//get user profile
-export const getProfile = async (req, res) => {
+
+// Get profile
+export const getProfile = async (req, res, next) => {
   try {
-    // req.user is set by verifyToken middleware
     const userData = {
       id: req.user.id,
       name: req.user.name,
       email: req.user.email,
     };
 
-    console.log(`Profile fetched for user: ${userData.email}`);
     res.status(200).json({ user: userData });
+
   } catch (err) {
-    console.error("Server error while fetching profile:", err.message);
-    res.status(500).json({ message: "Server error" });
+    next(err);  // 🔥 exact error
   }
 };

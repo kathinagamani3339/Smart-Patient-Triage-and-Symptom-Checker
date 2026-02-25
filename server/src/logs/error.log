@@ -1,0 +1,26 @@
+
+2026-02-25T09:07:10.859Z
+URL: /api/auth/login
+METHOD: POST
+MESSAGE: Password is incorrect
+STACK: Error: Password is incorrect
+    at loginUser (file:///C:/Users/nagamani.kathi/OneDrive%20-%20iSpace/Assignments/Smart-Patient-Triage-and-Symptom-Checker/server/src/controllers/authentication.controller.js:67:21)
+---------------------------------------
+
+2026-02-25T09:07:53.324Z
+URL: /api/auth/login
+METHOD: POST
+MESSAGE: User not found, please register first
+STACK: Error: User not found, please register first
+    at loginUser (file:///C:/Users/nagamani.kathi/OneDrive%20-%20iSpace/Assignments/Smart-Patient-Triage-and-Symptom-Checker/server/src/controllers/authentication.controller.js:59:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+---------------------------------------
+
+2026-02-25T09:08:30.300Z
+URL: /api/auth/login
+METHOD: POST
+MESSAGE: User not found, please register first
+STACK: Error: User not found, please register first
+    at loginUser (file:///C:/Users/nagamani.kathi/OneDrive%20-%20iSpace/Assignments/Smart-Patient-Triage-and-Symptom-Checker/server/src/controllers/authentication.controller.js:59:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+---------------------------------------

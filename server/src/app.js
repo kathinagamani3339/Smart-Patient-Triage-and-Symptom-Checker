@@ -5,6 +5,7 @@ import cors from "cors";
 import diagnosisRoutes from "./routes/diagnosis.routes.js"; // stays the same
 import providerRoutes from "./routes/provider.routes.js";
 import authRoutes from "./routes/authRoutes.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
 //middileware
@@ -14,5 +15,6 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/diagnosis", diagnosisRoutes);
 app.use("/api/providers", providerRoutes);
+app.use(errorHandler);
 
 export default app;
